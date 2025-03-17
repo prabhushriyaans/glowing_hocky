@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glow Hockey Game</title>
+    <script defer src="/socket.io/socket.io.js"></script>
+    <script defer src="/script.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: radial-gradient(circle, #001F3F, #000000);
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+        }
+        h1 {
+            text-shadow: 0 0 10px #0ff;
+        }
+        canvas {
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.8);
+            border-radius: 12px;
+            width: 90vw;
+            max-width: 600px;
+            aspect-ratio: 2 / 1;
+            transition: transform 0.2s;
+        }
+        canvas:hover {
+            transform: scale(1.05);
+        }
+        .scoreboard {
+            display: flex;
+            justify-content: space-around;
+            width: 350px;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+        }
+        .score {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0ff;
+            text-shadow: 0 0 12px #0ff;
+        }
+    </style>
+</head>
+<body class="flex flex-col justify-center items-center h-screen">
+    <h1 class="text-cyan-400 text-5xl font-bold mb-6">Glow Hockey</h1>
+    <canvas id="gameCanvas" class="bg-gray-900 border-4 border-white rounded-lg touch-none"></canvas>
+    <div class="scoreboard mt-6">
+        <p class="score">Player: <span id="playerScore">0</span></p>
+        <p class="score">AI: <span id="aiScore">0</span></p>
+    </div>
+</body>
+</html>
