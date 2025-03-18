@@ -22,18 +22,62 @@ const gameState = {
     scores: { player: 0, ai: 0 }
 };
 
-// Initial toss to decide who plays first
+// Initial toss with higher speed
 function initialToss() {
     let direction = Math.random() < 0.5 ? -1 : 1;
-    gameState.puck.vx = 4 * direction;
-    gameState.puck.vy = (Math.random() > 0.5 ? 1 : -1) * 3;
+    gameState.puck.vx = 6 * direction; // Increased speed
+    gameState.puck.vy = (Math.random() > 0.5 ? 1 : -1) * 4; // Increased speed
 }
 
+// Handle paddle collision with speed boost
+function checkPaddleCollision() {
+    const userPaddle = gameState.paddles.user;
+    const aiPaddle = gameState.paddles.ai;
+
+    // User paddle collision
+    if (Math.hypot(gameState.puck.x - userPaddle.x, gameState.puck.y - userPaddle.y) < userPaddle.radius + gameState.puck.radius) {
+        gameState.puck.vx = Math.abs(gameState.puck.vx) * 1.05; // Increase speed slightly
+        gameState.puck.vy *= 1.05; // Increase Y speed slightly
+    }
+
+    // AI paddle collision
+    if (Math.hypot(gameState.puck.x - aiPaddle.x, gameState.puck.y - aiPaddle.y) < aiPaddle.radius + gameState.puck.radius) {
+        gameState.puck.vx = -Math.abs(gameState.puck.vx) * 1.05; // Increase speed slightly
+        gameState.puck.vy *= 1.05; // Increase Y speed slightly
+    }
+}
+
+// Reset puck after goal with higher speed
+function resetPuck() {
+    gameState.puck.x = gameWidth / 2;
+    gameState.puck.y = gameHeight / 2;
+    initialToss();
+}
+
+
 // AI Decision Making using a smarter predictive algorithm
+// Improved AI Decision Making with Full Range Movement
 function aiMove() {
-    let targetY = gameState.puck.y; // AI targets puck position
-    let dy = targetY - gameState.paddles.ai.y;
-    gameState.paddles.ai.y += dy * 0.1; // Smooth AI movement
+    let predictionTime = (gameState.paddles.ai.x - gameState.puck.x) / gameState.puck.vx;
+    let predictedY = gameState.puck.y + gameState.puck.vy * predictionTime;
+    let predictedX = gameState.puck.x + gameState.puck.vx * predictionTime;
+
+    // Ensure AI stays within bounds
+    predictedY = Math.max(30, Math.min(gameHeight - 30, predictedY));
+    predictedX = Math.max(gameWidth / 2 + 30, Math.min(gameWidth - 30, predictedX));
+
+    let dx = predictedX - gameState.paddles.ai.x;
+    let dy = predictedY - gameState.paddles.ai.y;
+
+    // Increase AI speed when the puck is moving towards it
+    let speedFactor = gameState.puck.vx > 0 ? 0.12 : 0.06;
+
+    // Move AI both horizontally and vertically
+    gameState.paddles.ai.x += dx * speedFactor;
+    gameState.paddles.ai.y += dy * speedFactor;
+
+    // Restrict AI within its half
+    gameState.paddles.ai.x = Math.max(gameWidth / 2 + 30, Math.min(gameWidth - 30, gameState.paddles.ai.x));
 }
 
 io.on("connection", (socket) => {
