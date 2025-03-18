@@ -14,13 +14,12 @@ const gameHeight = 300;
 const paddleRadius = 25;
 
 const gameState = {
-    puck: { x: gameWidth / 2, y: gameHeight / 2, vx: 0, vy: 0, radius: 10, glow: false },
+    puck: { x: gameWidth / 2, y: gameHeight / 2, vx: 4, vy: 3, radius: 10 },
     paddles: {
-        user: { x: gameWidth / 4, y: gameHeight / 2, radius: paddleRadius, glow: false },
-        ai: { x: (3 * gameWidth) / 4, y: gameHeight / 2, radius: paddleRadius, glow: false }
+        user: { x: gameWidth / 4, y: gameHeight / 2, radius: paddleRadius },
+        ai: { x: (3 * gameWidth) / 4, y: gameHeight / 2, radius: paddleRadius }
     },
-    scores: { player: 0, ai: 0 },
-    courtGlow: false
+    scores: { player: 0, ai: 0 }
 };
 
 // Initial toss to decide who plays first
@@ -28,6 +27,13 @@ function initialToss() {
     let direction = Math.random() < 0.5 ? -1 : 1;
     gameState.puck.vx = 4 * direction;
     gameState.puck.vy = (Math.random() > 0.5 ? 1 : -1) * 3;
+}
+
+// AI Decision Making using a smarter predictive algorithm
+function aiMove() {
+    let targetY = gameState.puck.y; // AI targets puck position
+    let dy = targetY - gameState.paddles.ai.y;
+    gameState.paddles.ai.y += dy * 0.1; // Smooth AI movement
 }
 
 io.on("connection", (socket) => {
@@ -49,21 +55,13 @@ function gameLoop() {
     // Bounce off top and bottom walls
     if (gameState.puck.y - gameState.puck.radius < 0 || gameState.puck.y + gameState.puck.radius > gameHeight) {
         gameState.puck.vy *= -1;
-        gameState.courtGlow = true;
-        setTimeout(() => (gameState.courtGlow = false), 100);
     }
 
-    // AI paddle follows the puck
-    let targetX = Math.max(gameWidth / 2 + 10, Math.min(gameWidth - 30, gameState.puck.x));
-    let targetY = gameState.puck.y;
-    let dx = targetX - gameState.paddles.ai.x;
-    let dy = targetY - gameState.paddles.ai.y;
-    gameState.paddles.ai.x += dx * 0.07;
-    gameState.paddles.ai.y += dy * 0.07;
+    // AI Movement
+    aiMove();
 
     checkPaddleCollision();
     checkGoal();
-
     io.emit("update", gameState);
 }
 
@@ -75,23 +73,11 @@ function checkPaddleCollision() {
     // User paddle collision
     if (Math.hypot(gameState.puck.x - userPaddle.x, gameState.puck.y - userPaddle.y) < userPaddle.radius + gameState.puck.radius) {
         gameState.puck.vx = Math.abs(gameState.puck.vx);
-        gameState.puck.glow = true;
-        gameState.paddles.user.glow = true;
-        setTimeout(() => {
-            gameState.puck.glow = false;
-            gameState.paddles.user.glow = false;
-        }, 100);
     }
 
     // AI paddle collision
     if (Math.hypot(gameState.puck.x - aiPaddle.x, gameState.puck.y - aiPaddle.y) < aiPaddle.radius + gameState.puck.radius) {
         gameState.puck.vx = -Math.abs(gameState.puck.vx);
-        gameState.puck.glow = true;
-        gameState.paddles.ai.glow = true;
-        setTimeout(() => {
-            gameState.puck.glow = false;
-            gameState.paddles.ai.glow = false;
-        }, 100);
     }
 }
 
